@@ -1,12 +1,36 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import io from 'socket.io-client';
+import { API_URL } from './config';
 import store from './store';
 import Login from './features/auth/Login';
 import Game from './features/game/Game';
 import Leaderboard from './features/leaderboard/Leaderboard';
 
 function App() {
+  const [socket, setSocket] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+
+  useEffect(() => {
+    const newSocket = io(API_URL, {
+      withCredentials: true,
+    });
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('leaderboardUpdate', (updatedLeaderboard: any) => {
+        setLeaderboard(updatedLeaderboard);
+      });
+    }
+  }, [socket]);
+
   return (
     <Provider store={store}>
       <Router>
@@ -18,7 +42,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/game" element={<Game />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
-            </Routes>
+              </Routes>
           </div>
         </div>
       </Router>

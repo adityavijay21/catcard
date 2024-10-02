@@ -28,9 +28,6 @@ const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 console.log('Connecting to Redis at:', redisUrl);
 
 const redis = new Redis(redisUrl, {
-  tls: {
-    rejectUnauthorized: false
-  },
   retryStrategy: (times) => {
     const delay = Math.min(times * 50, 2000);
     return delay;
@@ -46,7 +43,13 @@ redis.on('error', (error) => {
   console.error('Redis connection error:', error);
 });
 
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || "https://catcard.onrender.com",
+  methods: ["GET", "POST"],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.post('/api/login', async (req, res) => {
