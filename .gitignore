@@ -22,9 +22,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Add this line to your .gitignore file
-src/.env
-
 # Environment variables
 .env
+src/.env
 backend/.env

@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "https://your-frontend-domain.com",  // Update this to your frontend URL
+    origin: "https://catcard.onrender.com/login", 
     methods: ["GET", "POST"]
   }
 });
