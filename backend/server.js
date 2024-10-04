@@ -5,6 +5,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const dotenv = require('dotenv');
+const axios = require('axios');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
@@ -112,6 +113,15 @@ app.get('/api/leaderboard', async (req, res) => {
     res.json(leaderboard);
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching leaderboard' });
+  }
+});
+
+app.get('/ip', async (req, res) => {
+  try {
+    const response = await axios.get('https://ifconfig.me');
+    res.send(response.data);
+  } catch (error) {
+    res.status(500).send('Error fetching IP');
   }
 });
 
