@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import io from 'socket.io-client';
+import { API_URL } from '../../config';
 
-const socket = io('http://localhost:8080');
+const socket = io(API_URL);
 
 interface LeaderboardEntry {
   username: string;
@@ -21,7 +22,7 @@ const Leaderboard: React.FC = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/leaderboard');
+      const response = await fetch(`${API_URL}/api/leaderboard`);
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard');
       }

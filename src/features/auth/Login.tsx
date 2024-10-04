@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setUsername } from './authSlice';
+import { API_URL } from '../../config';
 
 const Login: React.FC = () => {
   const [username, setUsernameLocal] = useState('');
@@ -14,7 +15,7 @@ const Login: React.FC = () => {
     setError(null);
     if (username.trim()) {
       try {
-        const response = await fetch('http://localhost:8080/api/login', {
+        const response = await fetch(`${API_URL}/api/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

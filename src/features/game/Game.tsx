@@ -5,8 +5,9 @@ import { drawCard, startGame, setScore, loadGame } from './gameSlice';
 import { useNavigate } from 'react-router-dom';
 import { setUsername } from '../auth/authSlice';
 import io from 'socket.io-client';
+import { API_URL } from '../../config';
 
-const socket = io('http://localhost:8080');
+const socket = io(API_URL);
 
 const Game: React.FC = () => {
   const dispatch = useDispatch();
@@ -58,7 +59,7 @@ const Game: React.FC = () => {
   const loadSavedGame = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/game/load/${username}`);
+      const response = await fetch(`${API_URL}/api/game/load/${username}`);
       if (response.ok) {
         const data = await response.json();
         dispatch(loadGame(data));
@@ -75,7 +76,7 @@ const Game: React.FC = () => {
 
   const saveGame = async () => {
     try {
-      await fetch('http://localhost:8080/api/game/save', {
+      await fetch(`${API_URL}/api/game/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ const Game: React.FC = () => {
   const handleStartGame = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/game/start', {
+      const response = await fetch(`${API_URL}/api/game/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
