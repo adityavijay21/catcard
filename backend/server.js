@@ -1,55 +1,43 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-
 const express = require('express');
 const cors = require('cors');
 const Redis = require('ioredis');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
+const dotenv = require('dotenv');
 
-console.log('Environment variables:');
-console.log('REDIS_URL:', process.env.REDIS_URL);
-console.log('PORT:', process.env.PORT);
-console.log('NODE_ENV:', process.env.NODE_ENV);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"]
   }
 });
 
-const port = process.env.PORT || 8080; // Change this to 8080
+const port = process.env.PORT || 8080;
 
-// Use the Redis URL from the environment variable
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-console.log('Connecting to Redis at:', redisUrl);
-
-const redis = new Redis(redisUrl, {
-  retryStrategy: (times) => {
+const redis = new Redis(process.env.REDIS_URL, {
+  tls: {
+    rejectUnauthorized: false
+  },
+  retryStrategy: function(times) {
     const delay = Math.min(times * 50, 2000);
     return delay;
-  },
-  maxRetriesPerRequest: 3
+  }
+});
+
+redis.on('error', (err) => {
+  console.error('Redis connection error:', err);
 });
 
 redis.on('connect', () => {
   console.log('Successfully connected to Redis');
 });
 
-redis.on('error', (error) => {
-  console.error('Redis connection error:', error);
-});
-
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "https://catcard.onrender.com",
-  methods: ["GET", "POST"],
-  credentials: true
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
 app.post('/api/login', async (req, res) => {
@@ -59,7 +47,6 @@ app.post('/api/login', async (req, res) => {
     const score = await redis.get(`user:${username}`);
     res.json({ success: true, message: 'Logged in successfully', score: parseInt(score) });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Error during login' });
   }
 });
@@ -77,7 +64,6 @@ app.post('/api/game/save', async (req, res) => {
     await redis.set(`gameState:${username}`, JSON.stringify(gameState));
     res.json({ success: true, message: 'Game saved successfully' });
   } catch (error) {
-    console.error('Save game error:', error);
     res.status(500).json({ success: false, message: 'Error saving game' });
   }
 });
@@ -92,7 +78,6 @@ app.get('/api/game/load/:username', async (req, res) => {
       res.status(404).json({ success: false, message: 'No saved game found' });
     }
   } catch (error) {
-    console.error('Load game error:', error);
     res.status(500).json({ success: false, message: 'Error loading game' });
   }
 });
@@ -102,7 +87,6 @@ app.post('/api/game/end', async (req, res) => {
   try {
     if (won) {
       await redis.incr(`user:${username}`);
-      console.log(`User ${username} won a game. Score incremented.`);
     }
     const newScore = await redis.get(`user:${username}`);
     
@@ -111,7 +95,6 @@ app.post('/api/game/end', async (req, res) => {
 
     res.json({ success: true, score: parseInt(newScore) });
   } catch (error) {
-    console.error('End game error:', error);
     res.status(500).json({ success: false, message: 'Error ending game' });
   }
 });
@@ -126,10 +109,8 @@ app.get('/api/leaderboard', async (req, res) => {
       })
     );
     leaderboard.sort((a, b) => b.score - a.score);
-    console.log('Leaderboard:', leaderboard);
     res.json(leaderboard);
   } catch (error) {
-    console.error('Leaderboard error:', error);
     res.status(500).json({ success: false, message: 'Error fetching leaderboard' });
   }
 });
@@ -156,11 +137,4 @@ async function getLeaderboard() {
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
-}).on('error', (e) => {
-  if (e.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use. Please choose a different port.`);
-    process.exit(1);
-  } else {
-    console.error('Server error:', e);
-  }
 });
